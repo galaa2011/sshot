@@ -1,23 +1,25 @@
 const passport = require('koa-passport')
-
-const fetchUser = (() => {
-  const user = {
-    id: 1,
-    username: 'admin',
-    password: 'sinachina'
-  }
-  return async function () {
-    return user
-  }
-})()
+const {
+  fetchUser
+} = require('./dao')
+// const fetchUser = (() => {
+//   const user = {
+//     id: 1,
+//     username: 'admin',
+//     password: 'sinachina'
+//   }
+//   return async function () {
+//     return user
+//   }
+// })()
 
 passport.serializeUser(function (user, done) {
-  done(null, user.id)
+  done(null, user)
 })
 
-passport.deserializeUser(async function (id, done) {
+passport.deserializeUser(async function (user, done) {
   try {
-    const user = await fetchUser()
+    user = await fetchUser(user.name, user.password)
     done(null, user)
   } catch (err) {
     done(err)
@@ -26,9 +28,9 @@ passport.deserializeUser(async function (id, done) {
 
 const LocalStrategy = require('passport-local').Strategy
 passport.use(new LocalStrategy(function (username, password, done) {
-  fetchUser()
+  fetchUser(username, password)
     .then(user => {
-      if (username === user.username && password === user.password) {
+      if (user && (username === user.name && password === user.password)) {
         done(null, user)
       } else {
         done(null, false)
